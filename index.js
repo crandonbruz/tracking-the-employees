@@ -70,13 +70,13 @@ function viewAllRoles() {
   db.query(
     `SELECT role.id, role.title, role.salary, department.name AS department
     FROM role
-    LEFT JOIN department ON role.department_id = department.id
+    LEFT JOIN department ON role.department_id = department.id;
     `,
     (err, result) => {
       if (err) {
         console.log(err);
       }
-      console.log(result);
+      console.table(result);
       questions();
     }
   );
@@ -87,20 +87,20 @@ function viewAllEmployees() {
     employee.id,
     employee.first_name,
     employee.last_name,
-    role.title AS job.title,
+    role.title AS job_title,
     department.name AS department,
     role.salary,
     manager.last_name AS manager
     FROM employee
     LEFT JOIN role ON employee.role_id = role.id
     LEFT JOIN department ON role.department_id = department.id
-    LEFT JOIN employee AS manager ON employee.manager_id = manager.id
+    LEFT JOIN employee AS manager ON employee.manager_id = manager.id;
     `,
     (err, result) => {
       if (err) {
         console.log(err);
       }
-      console.log(result);
+      console.table(result);
       questions();
     }
   );
@@ -116,14 +116,17 @@ function addDepartment() {
     ])
     .then((result) => {
       const { newDepartment } = result;
+      db.query(
+        `INSERT INTO department (name) VALUES ('${newDepartment}')`,
+        (err, result) => {
+          if (err) {
+            console.log(err);
+          }
+          console.log("NEW DEPARTMENT");
+          questions();
+        }
+      );
     });
-  db.query(`INSERT INTO department (name)`, [newDepartment], (err, result) => {
-    if (err) {
-      console.log(err);
-    }
-    console.log(result);
-    questions();
-  });
 }
 function addRoles() {
   db.query(`SELECT * FROM DEPARTMENT`, (err, result) => {
@@ -131,7 +134,7 @@ function addRoles() {
       console.log(err);
       questions();
     } else {
-      const roleChoices = addDepartment.map((department) => department.name);
+      const roleChoices = result.map((department) => department.name);
       inquirer
         .prompt([
           {
@@ -148,24 +151,24 @@ function addRoles() {
             type: "list",
             name: "placeDepartment",
             message: "Which department does the role belong to?",
-            choices: "roleChoices",
+            choices: roleChoices,
           },
         ])
         .then((results) => {
           const { roleTitle, roleSalary, department } = results;
-          const chosenDepartment = doccuments.find(
+          const chosenDepartment = department.find(
             (dept) => dept.name === department
           );
           const departmentId = chosenDepartment.id;
 
           db.query(
-            `INSERT INTO role (title, salary, department.id)`,
-            [roleTitle, roleSalary, departmentId],
+            `INSERT INTO role (title, salary, department.id) VALUES ('${roleTitle},  ${roleSalary}, ${departmentId}')`,
+
             (err, result) => {
               if (err) {
                 console.log(err);
               }
-              console.log(result);
+              console.log("NEW ROLE");
               questions();
             }
           );
@@ -222,13 +225,13 @@ function addEmployee() {
                 return name === manager;
               });
               db.query(
-                "INSERT INTO employee (first_name, last_name, role_id, manager_id)",
-                [first_name, last_name, roleId, theManager],
+                `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${first_name},  ${last_name}, ${roleId}, ${theManager})`,
+                
                 (err, results) => {
                   if (err) {
                     console.log(err);
                   } else {
-                    console.log(result);
+                    console.log("NEW EMPLOYEE");
                     questions();
                   }
                 }
